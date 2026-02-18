@@ -217,6 +217,78 @@ const vjsPlayer = videojs('videoPlayer',{
       maxMaxBufferLength:60
     }
   }
+
+  // ---------------- HLS anti-freeze / auto-recover ----------------
+
+let hlsLastTime = 0;
+let hlsStallCount = 0;
+
+function jumpToLiveEdge(){
+  try{
+    const seekable = vjsPlayer.seekable();
+    if(seekable && seekable.length){
+      const liveEdge = seekable.end(seekable.length - 1);
+      vjsPlayer.currentTime(liveEdge - 0.3);
+    }
+  }catch(e){}
+}
+
+vjsPlayer.on('playing', ()=>{
+  hlsLastTime = vjsPlayer.currentTime();
+  hlsStallCount = 0;
+});
+
+setInterval(()=>{
+
+  if(vjsPlayer.el().style.display !== "block") return;
+
+  const v = vjsPlayer.tech(true)?.el();
+  if(!v || v.paused) return;
+
+  const t = vjsPlayer.currentTime();
+
+  // walang usad ang oras → freeze
+  if(Math.abs(t - hlsLastTime) < 0.05){
+    hlsStallCount++;
+  }else{
+    hlsStallCount = 0;
+  }
+
+  hlsLastTime = t;
+
+  // 3 checks ≈ 6 seconds freeze
+  if(hlsStallCount >= 3){
+
+    const src = vjsPlayer.currentSource().src;
+
+    try{
+      vjsPlayer.pause();
+      vjsPlayer.src({src, type:"application/x-mpegURL"});
+      vjsPlayer.play().catch(()=>{});
+      setTimeout(jumpToLiveEdge, 800);
+    }catch(e){}
+
+    hlsStallCount = 0;
+  }
+
+}, 2000);
+
+  vjsPlayer.on("error", ()=>{
+
+  if(vjsPlayer.el().style.display !== "block") return;
+
+  const src = vjsPlayer.currentSource().src;
+
+  setTimeout(()=>{
+    try{
+      vjsPlayer.src({src, type:"application/x-mpegURL"});
+      vjsPlayer.play().catch(()=>{});
+      setTimeout(jumpToLiveEdge, 800);
+    }catch(e){}
+  },1500);
+
+});
+
 });
 
 const shakaVideo = document.getElementById('shakaPlayer');
@@ -783,6 +855,11 @@ async function tryLoadChannel(ch){
     await shakaVideo.play();
   }
 }
+vjsPlayer.reset();
+vjsPlayer.src({
+  src: ch.src[0],
+  type: "application/x-mpegURL"
+});
 
 /* ---------------- play with smooth transition ---------------- */
 
@@ -909,3 +986,4 @@ setTimeout(()=>{
 
 </body>
 </html>
+
