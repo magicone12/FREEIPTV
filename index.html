@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>San Mateo Cable IPTV – Smooth</title>
+<title>IPTV Smooth Player</title>
 
-<link href="https://vjs.zencdn.net/7.21.1/video-js.css" rel="stylesheet" />
+<link href="https://vjs.zencdn.net/7.21.1/video-js.css" rel="stylesheet"/>
 
 <style>
 html,body{
@@ -44,15 +44,12 @@ html,body{
 
 .video-layer video,
 .video-layer .video-js{
-  width:100% !important;
-  height:100% !important;
   position:absolute;
   inset:0;
+  width:100% !important;
+  height:100% !important;
   background:#000;
 }
-vjsPlayer.ready(() => {
-  vjsPlayer.controls(false);
-});
 
 .channel-list{
   position:fixed;
@@ -63,6 +60,7 @@ vjsPlayer.ready(() => {
   background:rgba(0,0,0,.9);
   display:flex;
   flex-direction:column;
+  color:#fff;
 }
 
 .channel-items{
@@ -82,7 +80,6 @@ vjsPlayer.ready(() => {
   border-radius:6px;
   cursor:pointer;
   background:rgba(255,255,255,.05);
-  color:#fff;
 }
 
 .channel-item.active{
@@ -135,10 +132,9 @@ vjsPlayer.ready(() => {
   border:none;
   background:rgba(0,0,0,.6);
   color:#fff;
-  cursor:pointer;
 }
 
-/* hide all videojs UI */
+/* totally hide all native / videojs UI */
 .vjs-control-bar,
 .vjs-loading-spinner,
 .vjs-big-play-button,
@@ -147,15 +143,13 @@ vjsPlayer.ready(() => {
   display:none !important;
 }
 
+video::-webkit-media-controls{display:none!important;}
+video::-moz-media-controls{display:none!important;}
+video::-ms-media-controls{display:none!important;}
+
 @media(max-width:768px){
-  .player-container{
-    right:0;
-    height:50vh;
-  }
-  .channel-list{
-    top:50vh;
-    width:100%;
-  }
+  .player-container{ right:0;height:50vh;}
+  .channel-list{ top:50vh;width:100%;}
 }
 </style>
 </head>
@@ -185,7 +179,7 @@ vjsPlayer.ready(() => {
   </div>
 
   <div class="channel-list">
-    <div style="padding:10px;font-size:18px;color:white;">IPTV Portal</div>
+    <div style="padding:10px;font-size:18px;">IPTV Portal</div>
     <div class="channel-items"></div>
   </div>
 
@@ -200,7 +194,7 @@ vjsPlayer.ready(() => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
 
 <script>
-/* ---------------- PLAYERS ---------------- */
+/* ---------------- VIDEO.JS (HLS) ---------------- */
 
 const vjsPlayer = videojs('videoPlayer',{
   autoplay:true,
@@ -220,88 +214,19 @@ const vjsPlayer = videojs('videoPlayer',{
       maxMaxBufferLength:60
     }
   }
-
-  // ---------------- HLS anti-freeze / auto-recover ----------------
-
-let hlsLastTime = 0;
-let hlsStallCount = 0;
-
-function jumpToLiveEdge(){
-  try{
-    const seekable = vjsPlayer.seekable();
-    if(seekable && seekable.length){
-      const liveEdge = seekable.end(seekable.length - 1);
-      vjsPlayer.currentTime(liveEdge - 0.3);
-    }
-  }catch(e){}
-}
-
-vjsPlayer.on('playing', ()=>{
-  hlsLastTime = vjsPlayer.currentTime();
-  hlsStallCount = 0;
 });
 
-setInterval(()=>{
-
-  if(vjsPlayer.el().style.display !== "block") return;
-
-  const v = vjsPlayer.tech(true)?.el();
-  if(!v || v.paused) return;
-
-  const t = vjsPlayer.currentTime();
-
-  // walang usad ang oras → freeze
-  if(Math.abs(t - hlsLastTime) < 0.05){
-    hlsStallCount++;
-  }else{
-    hlsStallCount = 0;
-  }
-
-  hlsLastTime = t;
-
-  // 3 checks ≈ 6 seconds freeze
-  if(hlsStallCount >= 3){
-
-    const src = vjsPlayer.currentSource().src;
-
-    try{
-      vjsPlayer.pause();
-      vjsPlayer.src({src, type:"application/x-mpegURL"});
-      vjsPlayer.play().catch(()=>{});
-      setTimeout(jumpToLiveEdge, 800);
-    }catch(e){}
-
-    hlsStallCount = 0;
-  }
-
-}, 2000);
-
-  vjsPlayer.on("error", ()=>{
-
-  if(vjsPlayer.el().style.display !== "block") return;
-
-  const src = vjsPlayer.currentSource().src;
-
-  setTimeout(()=>{
-    try{
-      vjsPlayer.src({src, type:"application/x-mpegURL"});
-      vjsPlayer.play().catch(()=>{});
-      setTimeout(jumpToLiveEdge, 800);
-    }catch(e){}
-  },1500);
-
+vjsPlayer.ready(()=>{
+  vjsPlayer.controls(false);
 });
 
-});
+document.getElementById("videoPlayer").controls = false;
+
+/* ---------------- SHAKA (MPD) ---------------- */
 
 const shakaVideo = document.getElementById('shakaPlayer');
-  const shakaVideo = document.getElementById('shakaPlayer');
 shakaVideo.controls = false;
 shakaVideo.removeAttribute("controls");
-
-
-  document.getElementById("videoPlayer").controls = false;
-document.getElementById("shakaPlayer").controls = false;
 
 const shakaPlayer = new shaka.Player(shakaVideo);
 
@@ -326,12 +251,10 @@ shakaPlayer.configure({
   }
 });
 
-/* ---------------- CHANNEL LIST ---------------- */
-
-/*
-  👉 DITO MO IPASTE ANG BUONG channels = [...] MO
-  👉 eksakto galing sa original file mo
-*/
+/* ======================================================
+   DITO MO IPASTE ANG BUONG CHANNEL LIST MO
+   (yung eksaktong channels = [...] galing sa file mo)
+   ====================================================== */
 
 const channels = [
    {
@@ -776,7 +699,7 @@ const channels = [
     src: ["https://live20.bozztv.com/akamaissh101/ssh101/alltv2/manifest.mpd"],
     type: "mpd"
   }
-  /* PASTE YOUR FULL CHANNEL ARRAY HERE */
+/* PASTE YOUR VERY LONG CHANNEL ARRAY HERE */
 ];
 
 /* ---------------- UI ---------------- */
@@ -799,7 +722,7 @@ function renderChannels(list){
   list.forEach((c,i)=>{
     const d = document.createElement("div");
     d.className="channel-item";
-    d.innerHTML = `<img src="${c.logo}"><span>${c.name}</span>`;
+    d.innerHTML = `<img src="${c.logo||''}"><span>${c.name}</span>`;
     d.onclick = ()=> playChannel(i,d);
     box.appendChild(d);
   });
@@ -808,7 +731,7 @@ function renderChannels(list){
 /* ---------------- overlay ---------------- */
 
 function showOverlay(ch,idx){
-  overlayLogo.src = ch.logo;
+  overlayLogo.src = ch.logo||"";
   overlayTitle.textContent = ch.name;
   overlayNumber.textContent = "Channel " + (idx+1);
   overlay.classList.add("show");
@@ -818,7 +741,7 @@ function showOverlay(ch,idx){
   },4000);
 }
 
-/* ---------------- fade switch ---------------- */
+/* ---------------- fade ---------------- */
 
 function fadeOut(){
   return new Promise(res=>{
@@ -826,7 +749,6 @@ function fadeOut(){
     setTimeout(res,200);
   });
 }
-
 function fadeIn(){
   layer.classList.remove("fade-out");
 }
@@ -866,13 +788,8 @@ async function tryLoadChannel(ch){
     await shakaVideo.play();
   }
 }
-vjsPlayer.reset();
-vjsPlayer.src({
-  src: ch.src[0],
-  type: "application/x-mpegURL"
-});
 
-/* ---------------- play with smooth transition ---------------- */
+/* ---------------- play ---------------- */
 
 async function playChannel(idx,el){
 
@@ -922,11 +839,10 @@ document.addEventListener("fullscreenchange",()=>{
     isFullscreen ? "flex" : "none";
 });
 
-/* ---------------- remote / keyboard ---------------- */
+/* ---------------- keyboard / remote ---------------- */
 
 document.addEventListener("keydown",e=>{
   const items = document.querySelectorAll(".channel-item");
-
   if(!items.length) return;
 
   switch(e.key){
@@ -962,7 +878,78 @@ document.addEventListener("keydown",e=>{
   }
 });
 
-/* ---------------- auto watchdog (anti-freeze) ---------------- */
+/* =====================================================
+   M3U8 ANTI-FREEZE / AUTO RECOVER
+   ===================================================== */
+
+let hlsLastTime = 0;
+let hlsStallCount = 0;
+
+function jumpToLiveEdge(){
+  try{
+    const s = vjsPlayer.seekable();
+    if(s && s.length){
+      const liveEdge = s.end(s.length-1);
+      vjsPlayer.currentTime(liveEdge - 0.3);
+    }
+  }catch(e){}
+}
+
+vjsPlayer.on('playing',()=>{
+  hlsLastTime = vjsPlayer.currentTime();
+  hlsStallCount = 0;
+});
+
+setInterval(()=>{
+
+  if(vjsPlayer.el().style.display!=="block") return;
+
+  const v = vjsPlayer.tech(true)?.el();
+  if(!v || v.paused) return;
+
+  const t = vjsPlayer.currentTime();
+
+  if(Math.abs(t - hlsLastTime) < 0.05){
+    hlsStallCount++;
+  }else{
+    hlsStallCount = 0;
+  }
+
+  hlsLastTime = t;
+
+  if(hlsStallCount >= 3){
+
+    const src = vjsPlayer.currentSource().src;
+
+    try{
+      vjsPlayer.pause();
+      vjsPlayer.src({src,type:"application/x-mpegURL"});
+      vjsPlayer.play().catch(()=>{});
+      setTimeout(jumpToLiveEdge,800);
+    }catch(e){}
+
+    hlsStallCount = 0;
+  }
+
+},2000);
+
+vjsPlayer.on("error",()=>{
+
+  if(vjsPlayer.el().style.display!=="block") return;
+
+  const src = vjsPlayer.currentSource().src;
+
+  setTimeout(()=>{
+    try{
+      vjsPlayer.src({src,type:"application/x-mpegURL"});
+      vjsPlayer.play().catch(()=>{});
+      setTimeout(jumpToLiveEdge,800);
+    }catch(e){}
+  },1500);
+
+});
+
+/* ---------------- generic watchdog ---------------- */
 
 setInterval(()=>{
 
@@ -997,5 +984,3 @@ setTimeout(()=>{
 
 </body>
 </html>
-
-
