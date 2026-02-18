@@ -147,10 +147,29 @@ video::-webkit-media-controls{display:none!important;}
 video::-moz-media-controls{display:none!important;}
 video::-ms-media-controls{display:none!important;}
 
-@media(max-width:768px){
-  .player-container{ right:0;height:50vh;}
-  .channel-list{ top:50vh;width:100%;}
+@media (max-width: 768px){
+
+  .player-container{
+    right:0;
+    left:0;
+    top:0;
+    height:60vh;
+  }
+
+  .channel-list{
+    top:60vh;
+    left:0;
+    right:0;
+    width:100%;
+    height:40vh;
+  }
+
+  .channel-items{
+    flex-direction:column;
+  }
+
 }
+
 </style>
 </head>
 
@@ -984,3 +1003,4 @@ setTimeout(()=>{
 
 </body>
 </html>
+
