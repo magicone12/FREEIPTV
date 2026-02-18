@@ -2,171 +2,256 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>San Mateo Cable IPTV</title>
+<title>San Mateo Cable IPTV – Smooth</title>
+
 <link href="https://vjs.zencdn.net/7.21.1/video-js.css" rel="stylesheet" />
+
 <style>
-html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial,sans-serif; }
-.iptv-container { display:flex; flex-direction:row; width:100%; height:100%;              z-index:15; outline:none;}
-
-.player-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 250px;  /* space para sa channel list */
-  bottom: 0;
-  background: #000;
-  z-index: 15;
-  overflow: hidden; /* siguradong hindi lalagpas ang video */
-   z-index:15; outline:none;
+html,body{
+  margin:0;
+  padding:0;
+  height:100%;
+  background:#000;
+  overflow:hidden;
+  font-family:Arial, sans-serif;
 }
 
-.player-container video,
-.player-container .video-js {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: relative; /* parang TV, lapat sa frame */
-  background: #000;
-   z-index:15; outline:none;
+.iptv-container{
+  display:flex;
+  height:100%;
 }
 
-
-/* hide native browser controls */
-video::-webkit-media-controls { display:none !important; }
-video::-moz-media-controls { display:none !important; }
-video::-ms-media-controls { display:none !important; }
-video::-o-media-controls { display:none !important; }
-
-/* Channel list */
-.channel-list { width:250px; position:fixed; top:0; right:0; bottom:0; background:rgba(0,0,0,0.9); display:flex; flex-direction:column; z-index:15; outline:none;     text-align: center;   }
-#channelSearch { padding:15px; border:5; border-radius:4px; width:100%; box-sizing:border-box; background:rgba(255,255,255,0.1); color:#fff; flex-shrink:0; }
-.channel-items { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:5px; padding:5px; }
-.channel-item { display:flex; align-items:center; gap:8px; padding:4px 6px; background: rgba(255,255,255,0.05); border-radius:4px; cursor:pointer; white-space: nowrap; }
-.channel-item img { width:32px; height:32px; object-fit:contain; border-radius:4px; }
-.channel-item.active { background: rgba(0,255,200,0.2); }
-
-/* On-screen overlay for channel info */
-.channel-overlay {
-  position: absolute;
-  top: 30px;
-  left: 30px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 12px 18px;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.65);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 999;
+.player-container{
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  right:250px;
+  background:#000;
+  overflow:hidden;
 }
-.channel-overlay.show { opacity: 1; }
-.channel-overlay img { width: 80px; height: 50px; object-fit:contain; border-radius:6px; }
-.channel-overlay .info { display:flex; flex-direction:column; }
-.channel-overlay .title { font-size:20px; font-weight:bold; }
-.channel-overlay .number { font-size:14px; opacity:0.8; }
 
-.fs-controls {
+.video-layer{
+  position:absolute;
+  inset:0;
+  opacity:1;
+  transition:opacity .25s ease;
+}
+
+.video-layer.fade-out{
+  opacity:0;
+}
+
+.video-layer video,
+.video-layer .video-js{
+  width:100% !important;
+  height:100% !important;
+  position:absolute;
+  inset:0;
+  background:#000;
+}
+
+.channel-list{
+  position:fixed;
+  right:0;
+  top:0;
+  bottom:0;
+  width:250px;
+  background:rgba(0,0,0,.9);
+  display:flex;
+  flex-direction:column;
+}
+
+.channel-items{
+  flex:1;
+  overflow-y:auto;
+  padding:6px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.channel-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:5px;
+  border-radius:6px;
+  cursor:pointer;
+  background:rgba(255,255,255,.05);
+  color:#fff;
+}
+
+.channel-item.active{
+  background:rgba(0,255,200,.25);
+}
+
+.channel-item img{
+  width:32px;
+  height:32px;
+  object-fit:contain;
+}
+
+.channel-overlay{
+  position:absolute;
+  top:30px;
+  left:30px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding:12px 16px;
+  background:rgba(0,0,0,.65);
+  border-radius:12px;
+  opacity:0;
+  transition:.3s;
+  z-index:20;
+}
+
+.channel-overlay.show{opacity:1;}
+
+.channel-overlay img{
+  width:70px;
+  height:45px;
+  object-fit:contain;
+}
+
+.fs-controls{
   position:fixed;
   bottom:20px;
   left:50%;
   transform:translateX(-50%);
   display:none;
-  gap:20px;
-  z-index:9999;
+  gap:15px;
+  z-index:50;
 }
-.fs-controls button {
-  background:rgba(0,0,0,0.6);
-  border:none;
-  color:#fff;
-  font-size:20px;
-  padding:10px 20px;
+
+.fs-controls button{
+  font-size:18px;
+  padding:8px 16px;
   border-radius:10px;
+  border:none;
+  background:rgba(0,0,0,.6);
+  color:#fff;
   cursor:pointer;
 }
 
-
-/* tanggalin ang "Video.js is loading" overlay */
+/* hide all videojs UI */
+.vjs-control-bar,
 .vjs-loading-spinner,
 .vjs-big-play-button,
-.vjs-control-bar,
 .vjs-error-display,
-.vjs-modal-dialog,
-.vjs-text-track-display {
-  display: none !important;
+.vjs-modal-dialog{
+  display:none !important;
 }
 
-/* para wala na ring background overlay */
-.video-js {
-  background: #000 !important;
-}
-
-
-
-.center {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 50%;
-}
-
-
-
-@media screen and (max-width:768px){
-  .iptv-container { flex-direction:column; height:100vh; }
-  .player-container { position:fixed; top:0; left:0; width:100%; height:50vh; right:auto; }
-  .channel-list { top:50vh; width:100%; height:50vh; }
+@media(max-width:768px){
+  .player-container{
+    right:0;
+    height:50vh;
+  }
+  .channel-list{
+    top:50vh;
+    width:100%;
+  }
 }
 </style>
 </head>
+
 <body>
 
 <div class="iptv-container">
+
   <div class="player-container">
-    <!-- Video.js player for HLS -->
-    <video id="videoPlayer" playsinline                                          poster="https://i.imgur.com/QCLCIy8.jpeg"></video>
-    <!-- Shaka player for MPD -->
-    <video id="shakaPlayer" playsinline style="display:none;"                                        poster="https://i.imgur.com/QCLCIy8.jpeg"></video>
-    <!-- Overlay -->
+
+    <div id="videoLayer" class="video-layer">
+
+      <video id="videoPlayer" class="video-js" playsinline></video>
+
+      <video id="shakaPlayer" playsinline style="display:none;"></video>
+
+    </div>
+
     <div id="channelOverlay" class="channel-overlay">
-      <img id="overlayLogo" src="" alt="">
-      <div class="info">
-        <div class="title" id="overlayTitle"></div>
-        <div class="number" id="overlayNumber"></div>
+      <img id="overlayLogo">
+      <div>
+        <div id="overlayTitle" style="font-size:18px;font-weight:bold"></div>
+        <div id="overlayNumber" style="font-size:13px;opacity:.7"></div>
       </div>
     </div>
+
   </div>
-  <div class="channel-list"> 
-<span style="font-size:20px; color:white; margin-left:8px;">IPTV Portal</span>
+
+  <div class="channel-list">
+    <div style="padding:10px;font-size:18px;color:white;">IPTV Portal</div>
     <div class="channel-items"></div>
   </div>
+
 </div>
 
-<div class="fs-controls" id="fsControls">
-  <button onclick="prevChannel()">⏮ Prev</button>
-  <button onclick="nextChannel()">Next ⏭</button>
+<div id="fsControls" class="fs-controls">
+  <button onclick="prevChannel()">⏮</button>
+  <button onclick="nextChannel()">⏭</button>
 </div>
 
 <script src="https://vjs.zencdn.net/7.21.1/video.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+
 <script>
-const vjsPlayer = videojs('videoPlayer', { autoplay:true, muted:false, liveui:false, controls:false });
-const shakaVideo = document.getElementById('shakaPlayer',  { autoplay:true, muted:false, liveui:false, controls:false });
-shakaVideo.controls = false;
+/* ---------------- PLAYERS ---------------- */
+
+const vjsPlayer = videojs('videoPlayer',{
+  autoplay:true,
+  muted:false,
+  controls:false,
+  liveui:true,
+  preload:'auto',
+  html5:{
+    vhs:{
+      enableLowInitialPlaylist:true,
+      smoothQualityChange:true,
+      fastQualityChange:true,
+      overrideNative:true,
+      bufferBasedABR:true,
+      liveSyncDurationCount:3,
+      maxBufferLength:30,
+      maxMaxBufferLength:60
+    }
+  }
+});
+
+const shakaVideo = document.getElementById('shakaPlayer');
 const shakaPlayer = new shaka.Player(shakaVideo);
 
-const overlay = document.getElementById("channelOverlay");
-const overlayLogo = document.getElementById("overlayLogo");
-const overlayTitle = document.getElementById("overlayTitle");
-const overlayNumber = document.getElementById("overlayNumber");
-let overlayTimer = null;
+shakaPlayer.configure({
+  streaming:{
+    bufferingGoal:20,
+    rebufferingGoal:5,
+    bufferBehind:30,
+    lowLatencyMode:true,
+    inaccurateManifestTolerance:2,
+    retryParameters:{
+      maxAttempts:5,
+      baseDelay:1000,
+      backoffFactor:2,
+      fuzzFactor:0.5
+    }
+  },
+  abr:{
+    enabled:true,
+    defaultBandwidthEstimate:2000000,
+    switchInterval:8
+  }
+});
+
+/* ---------------- CHANNEL LIST ---------------- */
+
+/*
+  👉 DITO MO IPASTE ANG BUONG channels = [...] MO
+  👉 eksakto galing sa original file mo
+*/
 
 const channels = [
-  {
+   {
     name: "Kapamilya Channel",
     logo: "https://i.imgur.com/fRETRXx.png",
     src: ["https://d1uf7s78uqso1e.cloudfront.net/out/v1/efa01372657648be830e7c23ff68bea2/index.mpd"],
@@ -608,112 +693,219 @@ const channels = [
     src: ["https://live20.bozztv.com/akamaissh101/ssh101/alltv2/manifest.mpd"],
     type: "mpd"
   }
+  /* PASTE YOUR FULL CHANNEL ARRAY HERE */
 ];
 
+/* ---------------- UI ---------------- */
+
+const layer = document.getElementById("videoLayer");
+const overlay = document.getElementById("channelOverlay");
+const overlayLogo = document.getElementById("overlayLogo");
+const overlayTitle = document.getElementById("overlayTitle");
+const overlayNumber = document.getElementById("overlayNumber");
+
 let selectedChannelIndex = 0;
+let overlayTimer = null;
 let isFullscreen = false;
 
-// render channel list
+/* ---------------- render list ---------------- */
+
 function renderChannels(list){
-  const container=document.querySelector('.channel-items');
-  container.innerHTML='';
-  list.forEach((ch,idx)=>{
-    const el=document.createElement('div');
-    el.className='channel-item';
-    el.innerHTML=`<img src="${ch.logo}" alt=""><span>${ch.name}</span>`;
-    el.onclick=()=>playChannel(idx,el);
-    container.appendChild(el);
-    if(idx===selectedChannelIndex) el.classList.add('active');
+  const box = document.querySelector('.channel-items');
+  box.innerHTML = "";
+  list.forEach((c,i)=>{
+    const d = document.createElement("div");
+    d.className="channel-item";
+    d.innerHTML = `<img src="${c.logo}"><span>${c.name}</span>`;
+    d.onclick = ()=> playChannel(i,d);
+    box.appendChild(d);
   });
 }
-function highlightActive(el){
-  document.querySelectorAll('.channel-item').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  el.focus();
-}
 
-// overlay show
-function showOverlay(ch, idx){
+/* ---------------- overlay ---------------- */
+
+function showOverlay(ch,idx){
   overlayLogo.src = ch.logo;
   overlayTitle.textContent = ch.name;
   overlayNumber.textContent = "Channel " + (idx+1);
   overlay.classList.add("show");
   clearTimeout(overlayTimer);
-  overlayTimer = setTimeout(()=>overlay.classList.remove("show"), 5000);
+  overlayTimer = setTimeout(()=>{
+    overlay.classList.remove("show");
+  },4000);
 }
 
-// load channel
-async function tryLoadChannel(ch){
-  if(ch.type==="hls"){
-    vjsPlayer.el().style.display='block';
-    shakaVideo.style.display='none';
-    vjsPlayer.src({src:ch.src[0],type:'application/x-mpegURL'});
-    await vjsPlayer.play();
-  }else{
-    vjsPlayer.el().style.display='none';
-    shakaVideo.style.display='block';
-    if(ch.drm) shakaPlayer.configure({ drm:{ clearKeys:{ [ch.drm.keyId]: ch.drm.key } } });
-    else shakaPlayer.configure({ drm:{} });
-    await shakaPlayer.load(ch.src[0]);
-    shakaVideo.play();
-  }
-}
+/* ---------------- fade switch ---------------- */
 
-// play channel
-function playChannel(idx, el){
-  selectedChannelIndex=idx;
-  highlightActive(el);
-  try{ vjsPlayer.pause(); }catch(e){}
-  try{ shakaPlayer.unload(); }catch(e){}
-  tryLoadChannel(channels[idx]).then(()=>{ 
-    goFullscreen();
-    showOverlay(channels[idx], idx);
+function fadeOut(){
+  return new Promise(res=>{
+    layer.classList.add("fade-out");
+    setTimeout(res,200);
   });
 }
 
-// next/prev
-function nextChannel(){
-  selectedChannelIndex=(selectedChannelIndex+1)%channels.length;
-  playChannel(selectedChannelIndex, document.querySelectorAll('.channel-item')[selectedChannelIndex]);
-}
-function prevChannel(){
-  selectedChannelIndex=(selectedChannelIndex-1+channels.length)%channels.length;
-  playChannel(selectedChannelIndex, document.querySelectorAll('.channel-item')[selectedChannelIndex]);
+function fadeIn(){
+  layer.classList.remove("fade-out");
 }
 
-// fullscreen
-function goFullscreen(){
-  const playerEl = vjsPlayer.el().style.display==='block'? vjsPlayer.el() : shakaVideo;
-  if(playerEl.requestFullscreen) playerEl.requestFullscreen();
-  else if(playerEl.webkitRequestFullscreen) playerEl.webkitRequestFullscreen();
-  isFullscreen=true;
+/* ---------------- load channel ---------------- */
+
+async function tryLoadChannel(ch){
+
+  if(ch.type === "hls"){
+
+    vjsPlayer.el().style.display="block";
+    shakaVideo.style.display="none";
+
+    try{ await shakaPlayer.unload(); }catch(e){}
+
+    vjsPlayer.reset();
+    vjsPlayer.src({src:ch.src[0],type:"application/x-mpegURL"});
+    await vjsPlayer.play();
+
+  }else{
+
+    vjsPlayer.el().style.display="none";
+    shakaVideo.style.display="block";
+
+    try{ vjsPlayer.pause(); }catch(e){}
+    await shakaPlayer.unload();
+
+    if(ch.drm){
+      shakaPlayer.configure({
+        drm:{ clearKeys:{ [ch.drm.keyId]: ch.drm.key } }
+      });
+    }else{
+      shakaPlayer.configure({ drm:{ clearKeys:{} } });
+    }
+
+    await shakaPlayer.load(ch.src[0]);
+    await shakaVideo.play();
+  }
 }
+
+/* ---------------- play with smooth transition ---------------- */
+
+async function playChannel(idx,el){
+
+  selectedChannelIndex = idx;
+
+  document.querySelectorAll('.channel-item')
+    .forEach(x=>x.classList.remove("active"));
+  if(el) el.classList.add("active");
+
+  await fadeOut();
+  await tryLoadChannel(channels[idx]);
+  fadeIn();
+
+  showOverlay(channels[idx],idx);
+  goFullscreen();
+}
+
+/* ---------------- next / prev ---------------- */
+
+function nextChannel(){
+  const items = document.querySelectorAll(".channel-item");
+  selectedChannelIndex = (selectedChannelIndex+1)%items.length;
+  playChannel(selectedChannelIndex,items[selectedChannelIndex]);
+}
+
+function prevChannel(){
+  const items = document.querySelectorAll(".channel-item");
+  selectedChannelIndex = (selectedChannelIndex-1+items.length)%items.length;
+  playChannel(selectedChannelIndex,items[selectedChannelIndex]);
+}
+
+/* ---------------- fullscreen ---------------- */
+
+function goFullscreen(){
+  const el = vjsPlayer.el().style.display==="block"
+    ? vjsPlayer.el()
+    : shakaVideo;
+
+  if(!document.fullscreenElement){
+    if(el.requestFullscreen) el.requestFullscreen();
+  }
+}
+
 document.addEventListener("fullscreenchange",()=>{
-  document.getElementById("fsControls").style.display=document.fullscreenElement? "flex":"none";
-  isFullscreen=!!document.fullscreenElement;
+  isFullscreen = !!document.fullscreenElement;
+  document.getElementById("fsControls").style.display =
+    isFullscreen ? "flex" : "none";
 });
 
-// remote key
-document.addEventListener('keydown', e=>{
-  const items=document.querySelectorAll('.channel-item');
+/* ---------------- remote / keyboard ---------------- */
+
+document.addEventListener("keydown",e=>{
+  const items = document.querySelectorAll(".channel-item");
+
+  if(!items.length) return;
+
   switch(e.key){
-    case "ArrowUp": selectedChannelIndex=(selectedChannelIndex-1+items.length)%items.length; highlightActive(items[selectedChannelIndex]); break;
-    case "ArrowDown": selectedChannelIndex=(selectedChannelIndex+1)%items.length; highlightActive(items[selectedChannelIndex]); break;
-    case "Enter": playChannel(selectedChannelIndex, items[selectedChannelIndex]); break;
-    case "ArrowRight": if(isFullscreen) nextChannel(); break;
-    case "ArrowLeft": if(isFullscreen) prevChannel(); break;
-    case "Backspace": if(isFullscreen && document.exitFullscreen) document.exitFullscreen(); break;
+    case "ArrowUp":
+      selectedChannelIndex=(selectedChannelIndex-1+items.length)%items.length;
+      items[selectedChannelIndex].scrollIntoView({block:"nearest"});
+      items.forEach(x=>x.classList.remove("active"));
+      items[selectedChannelIndex].classList.add("active");
+      break;
+
+    case "ArrowDown":
+      selectedChannelIndex=(selectedChannelIndex+1)%items.length;
+      items[selectedChannelIndex].scrollIntoView({block:"nearest"});
+      items.forEach(x=>x.classList.remove("active"));
+      items[selectedChannelIndex].classList.add("active");
+      break;
+
+    case "Enter":
+      playChannel(selectedChannelIndex,items[selectedChannelIndex]);
+      break;
+
+    case "ArrowRight":
+      if(isFullscreen) nextChannel();
+      break;
+
+    case "ArrowLeft":
+      if(isFullscreen) prevChannel();
+      break;
+
+    case "Backspace":
+      if(document.exitFullscreen) document.exitFullscreen();
+      break;
   }
 });
 
-// init
-renderChannels(channels);
-highlightActive(document.querySelectorAll('.channel-item')[selectedChannelIndex]);
-playChannel(0, document.querySelectorAll('.channel-item')[0]);
-</script>
+/* ---------------- auto watchdog (anti-freeze) ---------------- */
 
-<script disable-devtool-auto
-src="https://cdn.jsdelivr.net/npm/disable-devtool"></script>
+setInterval(()=>{
+
+  if(vjsPlayer.el().style.display==="block"){
+    const v = vjsPlayer.tech(true)?.el();
+    if(v && !v.paused && v.readyState < 2){
+      vjsPlayer.play().catch(()=>{});
+    }
+  }
+
+  if(shakaVideo.style.display==="block"){
+    if(!shakaVideo.paused && shakaVideo.readyState < 2){
+      shakaVideo.play().catch(()=>{});
+    }
+  }
+
+},5000);
+
+/* ---------------- init ---------------- */
+
+renderChannels(channels);
+
+setTimeout(()=>{
+  const first = document.querySelector(".channel-item");
+  if(first){
+    first.classList.add("active");
+    playChannel(0,first);
+  }
+},200);
+
+</script>
 
 </body>
 </html>
