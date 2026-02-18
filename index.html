@@ -50,6 +50,9 @@ html,body{
   inset:0;
   background:#000;
 }
+vjsPlayer.ready(() => {
+  vjsPlayer.controls(false);
+});
 
 .channel-list{
   position:fixed;
@@ -292,6 +295,14 @@ setInterval(()=>{
 });
 
 const shakaVideo = document.getElementById('shakaPlayer');
+  const shakaVideo = document.getElementById('shakaPlayer');
+shakaVideo.controls = false;
+shakaVideo.removeAttribute("controls");
+
+
+  document.getElementById("videoPlayer").controls = false;
+document.getElementById("shakaPlayer").controls = false;
+
 const shakaPlayer = new shaka.Player(shakaVideo);
 
 shakaPlayer.configure({
@@ -986,4 +997,5 @@ setTimeout(()=>{
 
 </body>
 </html>
+
 
